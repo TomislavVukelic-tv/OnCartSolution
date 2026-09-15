@@ -1,0 +1,12 @@
+Module Catalog
+{
+    Entity Category
+    {
+        ShortString Code { AutoCode; Unique; }
+        ShortString Name { Required; }
+
+        Reference Parent Catalog.Category;
+
+        Logging;
+    }
+}

@@ -1,0 +1,21 @@
+Module Catalog
+{
+    Entity Product
+    {
+        ShortString Code { AutoCode; Unique; }
+        ShortString Name { Required; }
+        LongString Description;
+
+        Reference Category Catalog.Category { Required; }
+
+        Money Price { Required; }
+        ShortString Currency { Required; DefaultValue 'item => "USD"'; }
+
+        Bool IsDiscontinued { Required; DefaultValue 'item => false'; }
+
+        ItemFilter NegativePrice 'item => item.Price < 0';
+        InvalidData NegativePrice 'Price cannot be negative.';
+
+        Logging { AllProperties; }
+    }
+}
