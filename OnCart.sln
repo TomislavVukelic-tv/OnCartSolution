@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway", "Gateway\Gateway.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService", "AuthService\AuthService.csproj", "{792FF405-C966-4DA8-B4E6-288B8AA4DEAC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatalogService", "CatalogService\CatalogService.csproj", "{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{792FF405-C966-4DA8-B4E6-288B8AA4DEAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{792FF405-C966-4DA8-B4E6-288B8AA4DEAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{792FF405-C966-4DA8-B4E6-288B8AA4DEAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
