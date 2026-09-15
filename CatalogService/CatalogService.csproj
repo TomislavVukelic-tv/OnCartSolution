@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <Folder Include="DslScripts\" />
-    <Folder Include="AfterDeploy\" />
   </ItemGroup>
 
 </Project>

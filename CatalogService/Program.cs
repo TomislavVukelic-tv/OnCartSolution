@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Rhetos;
+using System.Text;
 
 namespace CatalogService;
 
@@ -21,7 +23,7 @@ public class Program
 
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
-        return Microsoft.Extensions.Hosting.Host
+        return Host
             .CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults(webBuilder =>
             {
@@ -38,7 +40,7 @@ public class Program
         IServiceCollection services,
         IConfiguration configuration)
     {
-        
+
         services
             .AddRhetosHost((serviceProvider, rhetosHostBuilder) =>
             {
@@ -76,15 +78,52 @@ public class Program
                     Title = "CatalogService",
                     Version = "v1"
                 });
+
+            options.AddSecurityDefinition(
+                JwtBearerDefaults.AuthenticationScheme,
+                new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Description = "Paste the JWT from the auth service (no \"Bearer \" prefix).",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
+                });
+
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(
+                    JwtBearerDefaults.AuthenticationScheme,
+                    document)] = []
+            });
         });
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
+                var signingKey = configuration["Jwt:SigningKey"] ?? throw new InvalidOperationException("SigningKey is not set.");
+
                 //options.Authority = configuration["Jwt:Authority"]; not needed in demo
-                options.Audience = configuration["Jwt:Audience"];
-                options.RequireHttpsMetadata = true;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters =
+                    new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = configuration["Jwt:Issuer"],
+                        ValidateAudience = true,
+                        ValidAudience = configuration["Jwt:Audience"],
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromSeconds(30),
+
+                        RoleClaimType =
+                            System.Security.Claims.ClaimTypes.Role,
+                        NameClaimType =
+                            System.Security.Claims.ClaimTypes.NameIdentifier
+                    };
             })
             .AddCookie(options =>
             {
