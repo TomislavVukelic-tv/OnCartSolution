@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthService", "AuthService\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CatalogService", "CatalogService\CatalogService.csproj", "{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryService", "InventoryService\InventoryService.csproj", "{8F36E0F2-BE58-464D-A7FC-E41E0CAE6397}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FEFC3CE-5F7F-9549-B594-5C76A1B3CCA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F36E0F2-BE58-464D-A7FC-E41E0CAE6397}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F36E0F2-BE58-464D-A7FC-E41E0CAE6397}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F36E0F2-BE58-464D-A7FC-E41E0CAE6397}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F36E0F2-BE58-464D-A7FC-E41E0CAE6397}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
