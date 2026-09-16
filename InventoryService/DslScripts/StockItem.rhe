@@ -1,0 +1,24 @@
+Module Inventory
+{
+    Entity StockItem
+    {
+        Guid ProductID { Required; Unique; }
+
+        Integer QuantityOnHand { Required; DefaultValue 'item => 0'; }
+
+        Integer QuantityReserved { Required; DefaultValue 'item => 0'; }
+
+        Integer ReorderThreshold { Required; DefaultValue 'item => 0'; }
+
+        ItemFilter NegativeOnHand 'item => item.QuantityOnHand < 0';
+        InvalidData NegativeOnHand 'Quantity on hand cannot be negative.';
+
+        ItemFilter NegativeReserved 'item => item.QuantityReserved < 0';
+        InvalidData NegativeReserved 'Reserved quantity cannot be negative.';
+
+        ItemFilter OverReserved 'item => item.QuantityReserved > item.QuantityOnHand';
+        InvalidData OverReserved 'Reserved quantity cannot exceed quantity on hand.';
+
+        Logging { AllProperties; }
+    }
+}
