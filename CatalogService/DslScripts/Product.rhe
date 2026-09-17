@@ -13,9 +13,46 @@ Module Catalog
 
         Bool IsDiscontinued { Required; DefaultValue 'item => false'; }
 
+        ShortString StockStatus { Required; DefaultValue 'item => "Unavailable"'; } // "InStock" | "Inquiry" | "Unavailable"
+
         ItemFilter NegativePrice 'item => item.Price < 0';
         InvalidData NegativePrice 'Price cannot be negative.';
 
         Logging { AllProperties; }
+
+        SaveMethod
+        {
+            AfterSave WriteOutboxEvents
+                '   
+                    var events = new System.Collections.Generic.List<Messaging.OutboxEvent>();
+
+                    foreach (var item in insertedNew)
+                        events.Add(new Messaging.OutboxEvent
+                        {
+                            ID = System.Guid.NewGuid(),
+                            EventType = "ProductCreated",
+                            AggregateId = item.ID,
+                            Payload = System.Text.Json.JsonSerializer.Serialize(
+                                new { ProductId = item.ID, Code = item.Code, Name = item.Name }),
+                            CreatedAt = System.DateTime.Now,
+                            Processed = false
+                        });
+
+                    foreach (var item in deletedIds)
+                        events.Add(new Messaging.OutboxEvent
+                        {
+                            ID = System.Guid.NewGuid(),
+                            EventType = "ProductRemoved",
+                            AggregateId = item.ID,
+                            Payload = System.Text.Json.JsonSerializer.Serialize(
+                                new { ProductId = item.ID }),
+                            CreatedAt = System.DateTime.Now,
+                            Processed = false
+                        });
+
+                    if (events.Count > 0)
+                        _domRepository.Messaging.OutboxEvent.Insert(events);
+                ';
+        }
     }
 }

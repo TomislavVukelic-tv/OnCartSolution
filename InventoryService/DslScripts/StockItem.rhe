@@ -10,6 +10,8 @@ Module Inventory
 
         Integer ReorderThreshold { Required; DefaultValue 'item => 0'; }
 
+        Bool Active { Required; DefaultValue 'item => true'; }
+
         ItemFilter NegativeOnHand 'item => item.QuantityOnHand < 0';
         InvalidData NegativeOnHand 'Quantity on hand cannot be negative.';
 
@@ -20,5 +22,41 @@ Module Inventory
         InvalidData OverReserved 'Reserved quantity cannot exceed quantity on hand.';
 
         Logging { AllProperties; }
+
+        SaveMethod
+        {
+            AfterSave WriteStockOutboxEvents
+                '
+                    var events = new System.Collections.Generic.List<Messaging.OutboxEvent>();
+
+                    Messaging.OutboxEvent BuildEvent(int onHand, int reserved, int threshold, System.Guid productId)
+                    {
+                        int available = onHand - reserved;
+                        string status = available <= 0
+                            ? "Unavailable"
+                            : (available <= threshold ? "Inquiry" : "InStock");
+
+                        return new Messaging.OutboxEvent
+                        {
+                            ID = System.Guid.NewGuid(),
+                            EventType = "StockStatusChanged",
+                            AggregateId = productId,
+                            Payload = System.Text.Json.JsonSerializer.Serialize(
+                                new { ProductId = productId, Status = status, Available = available }),
+                            CreatedAt = System.DateTime.Now,
+                            Processed = false
+                        };
+                    }
+
+                    foreach (var item in insertedNew)
+                        events.Add(BuildEvent(item.QuantityOnHand ?? 0, item.QuantityReserved ?? 0, item.ReorderThreshold ?? 0, item.ProductID.Value));
+
+                    foreach (var item in updatedNew)
+                        events.Add(BuildEvent(item.QuantityOnHand ?? 0, item.QuantityReserved ?? 0, item.ReorderThreshold ?? 0, item.ProductID.Value));
+
+                    if (events.Count > 0)
+                        _domRepository.Messaging.OutboxEvent.Insert(events);
+                ';
+        }
     }
 }

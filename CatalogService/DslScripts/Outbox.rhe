@@ -1,0 +1,14 @@
+Module Messaging
+{
+    Entity OutboxEvent
+    {
+        ShortString EventType { Required; }   // "ProductCreated" | "ProductRemoved"
+        Guid AggregateId { Required; }
+        LongString Payload;
+
+        DateTime CreatedAt { Required; }
+        Bool Processed { Required; }
+        DateTime ProcessedAt;
+        ShortString PublishError;
+    }
+}

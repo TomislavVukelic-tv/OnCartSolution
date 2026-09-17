@@ -148,6 +148,17 @@ public class Program
                 connectionString,
                 name: "sql-server",
                 tags: ["ready"]);
+
+        services
+            .AddHttpClient("events")
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                // DEV hack to allow self-signed certificates to not cause issues.
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
+
+        services.AddHostedService<OutboxPublisher>();
     }
 
     private static void ConfigurePipeline(WebApplication app)
