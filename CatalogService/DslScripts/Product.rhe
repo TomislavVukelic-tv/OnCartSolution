@@ -9,7 +9,7 @@ Module Catalog
         Reference Category Catalog.Category { Required; }
 
         Money Price { Required; }
-        ShortString Currency { Required; DefaultValue 'item => "USD"'; }
+        ShortString Currency { Required; DefaultValue 'item => "EUR"'; }
 
         Bool IsDiscontinued { Required; DefaultValue 'item => false'; }
 
@@ -22,8 +22,14 @@ Module Catalog
 
         SaveMethod
         {
+            LoadOldItems
+            {
+                Take 'Price';
+                Take 'Currency';
+            }
+
             AfterSave WriteOutboxEvents
-                '   
+                '
                     var events = new System.Collections.Generic.List<Messaging.OutboxEvent>();
 
                     foreach (var item in insertedNew)
@@ -33,10 +39,29 @@ Module Catalog
                             EventType = "ProductCreated",
                             AggregateId = item.ID,
                             Payload = System.Text.Json.JsonSerializer.Serialize(
-                                new { ProductId = item.ID, Code = item.Code, Name = item.Name }),
+                                new { ProductId = item.ID, Code = item.Code, Name = item.Name, Price = item.Price, Currency = item.Currency }),
                             CreatedAt = System.DateTime.Now,
                             Processed = false
                         });
+
+                    var newArray = System.Linq.Enumerable.ToArray(updatedNew);
+                    var oldArray = System.Linq.Enumerable.ToArray(updatedOld);
+                    for (int i = 0; i < newArray.Length; i++)
+                    {
+                        var newItem = newArray[i];
+                        var oldItem = oldArray[i];
+                        if (newItem.Price != oldItem.Price || newItem.Currency != oldItem.Currency)
+                            events.Add(new Messaging.OutboxEvent
+                            {
+                                ID = System.Guid.NewGuid(),
+                                EventType = "ProductPriceChanged",
+                                AggregateId = newItem.ID,
+                                Payload = System.Text.Json.JsonSerializer.Serialize(
+                                    new { ProductId = newItem.ID, Price = newItem.Price, Currency = newItem.Currency }),
+                                CreatedAt = System.DateTime.Now,
+                                Processed = false
+                            });
+                    }
 
                     foreach (var item in deletedIds)
                         events.Add(new Messaging.OutboxEvent

@@ -1,0 +1,8 @@
+Module Messaging
+{
+    Entity ProcessedEvent
+    {
+        ShortString EventType;
+        DateTime ProcessedAt;
+    }
+}

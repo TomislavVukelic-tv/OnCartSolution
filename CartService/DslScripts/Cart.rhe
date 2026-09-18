@@ -1,0 +1,87 @@
+Module Cart
+{
+    Entity ProductSnapshot
+    {
+        Guid ProductID { Required; Unique; }
+        ShortString ProductName { Required; }
+        Money UnitPrice { Required; }
+        ShortString Currency { Required; DefaultValue 'item => "EUR"'; }
+
+        Bool Active { Required; DefaultValue 'item => true'; }
+
+        Logging { AllProperties; }
+    }
+
+    Entity ShoppingCart
+    {
+        ShortString CustomerName { Required; }
+        ShortString Status { Required; DefaultValue 'item => "Active"'; } // "Active" | "CheckedOut"
+        DateTime CreatedAt { CreationTime; }
+        DateTime CheckedOutAt;
+
+        Logging { AllProperties; }
+
+        SaveMethod
+        {
+            LoadOldItems
+            {
+                Take 'Status';
+            }
+
+            AfterSave WriteCheckoutEvent
+                '
+                    var events = new System.Collections.Generic.List<Messaging.OutboxEvent>();
+
+                    var newArray = System.Linq.Enumerable.ToArray(updatedNew);
+                    var oldArray = System.Linq.Enumerable.ToArray(updatedOld);
+                    for (int i = 0; i < newArray.Length; i++)
+                    {
+                        var newItem = newArray[i];
+                        var oldItem = oldArray[i];
+                        if (oldItem.Status != "CheckedOut" && newItem.Status == "CheckedOut")
+                        {
+                            var lines = _domRepository.Cart.CartItem.Query()
+                                .Where(ci => ci.ShoppingCartID == newItem.ID)
+                                .Select(ci => new { ProductId = ci.ProductID, ProductName = ci.ProductName, UnitPrice = ci.UnitPrice, Quantity = ci.Quantity })
+                                .ToList();
+
+                            events.Add(new Messaging.OutboxEvent
+                            {
+                                ID = System.Guid.NewGuid(),
+                                EventType = "CartCheckedOut",
+                                AggregateId = newItem.ID,
+                                Payload = System.Text.Json.JsonSerializer.Serialize(
+                                    new { CartId = newItem.ID, Customer = newItem.CustomerName, CheckedOutAt = newItem.CheckedOutAt, Items = lines }),
+                                CreatedAt = System.DateTime.Now,
+                                Processed = false
+                            });
+                        }
+                    }
+
+                    if (events.Count > 0)
+                        _domRepository.Messaging.OutboxEvent.Insert(events);
+                ';
+        }
+    }
+
+    Entity CartItem
+    {
+        Reference ShoppingCart { Detail; }
+        Guid ProductID { Required; }
+        ShortString ProductName { Required; }
+        Money UnitPrice { Required; }
+        Integer Quantity { Required; }
+
+        ItemFilter NonPositiveQuantity 'item => item.Quantity <= 0';
+        InvalidData NonPositiveQuantity 'Quantity must be greater than zero.';
+
+        Logging { AllProperties; }
+    }
+
+    Action AddToCart '(parameters, repository, userInfo) => CartService.CartActions.AddToCart(parameters, repository, userInfo)'
+    {
+        Guid ProductID;
+        Integer Quantity;
+    }
+
+}

@@ -42,9 +42,6 @@ namespace Gateway
                         }
                         else if (!string.IsNullOrEmpty(jwtSigningKey))
                         {
-                            // Anonymous caller: mint a short-lived read-only 'guest'
-                            // token so downstream services still receive a valid,
-                            // least-privilege identity (guest -> customer role).
                             var guestToken = GenerateGuestToken(jwtIssuer, jwtAudience, jwtSigningKey);
                             transform.ProxyRequest.Headers.Remove("Authorization");
                             transform.ProxyRequest.Headers.TryAddWithoutValidation("Authorization", $"Bearer {guestToken}");

@@ -6,7 +6,7 @@ using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 using Rhetos;
 
-namespace InventoryService;
+namespace CartService;
 
 public sealed class OutboxPublisher : BackgroundService
 {
@@ -85,7 +85,7 @@ public sealed class OutboxPublisher : BackgroundService
 
         var client = _httpClientFactory.CreateClient("events");
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", GenerateServiceToken());
+            new AuthenticationHeaderValue("Bearer", ServiceTokenFactory.GenerateServiceToken(_configuration));
 
         var outcomes = new Dictionary<Guid, string?>();
         foreach (var evt in pending)
@@ -167,32 +167,6 @@ public sealed class OutboxPublisher : BackgroundService
         var delivered = outcomes.Values.Count(e => e is null);
         _logger.LogInformation(
             "Outbox: delivered {Delivered}/{Total} event(s).", delivered, pending.Count);
-    }
-
-    private string GenerateServiceToken()
-    {
-        var signingKey = _configuration["Jwt:SigningKey"]
-            ?? throw new InvalidOperationException("Jwt:SigningKey is not set.");
-
-        var credentials = new SigningCredentials(
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
-            SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, "inventory-publisher"),
-            new Claim(ClaimTypes.Role, "event-publisher")
-        };
-
-        var jwt = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddMinutes(5),
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 
     private sealed class PendingEvent
