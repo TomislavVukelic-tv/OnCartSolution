@@ -21,6 +21,12 @@ Module Cart
 
         Logging { AllProperties; }
 
+        RowPermissions
+        {
+            AllowRead OwnCart 'context => item => item.CustomerName == context.UserInfo.UserName';
+            AllowWrite OwnCart 'context => item => item.CustomerName == context.UserInfo.UserName';
+        }
+
         SaveMethod
         {
             LoadOldItems
@@ -76,6 +82,11 @@ Module Cart
         InvalidData NonPositiveQuantity 'Quantity must be greater than zero.';
 
         Logging { AllProperties; }
+
+        RowPermissions
+        {
+            InheritFromReference ShoppingCart;
+        }
     }
 
     Action AddToCart '(parameters, repository, userInfo) => CartService.CartActions.AddToCart(parameters, repository, userInfo)'
